@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	data, err := os.ReadFile("/home/gouveiae/Documents/Coding/mosart_channel_templates_explorer/channel_templates/v2_channeltemplates.xml")
+	data, err := os.ReadFile("/Users/ethangouveia/GolandProjects/mosart_channel_templates_explorer/channel_templates/channeltemplates.xml")
 
 	if err != nil {
 		panic(err)
@@ -21,6 +21,5 @@ func main() {
 	}
 
 	fmt.Println(a)
-	fmt.Println(a.ChannelTemplates)
 	fmt.Println(a.ChannelTemplates.Channels)
 }
