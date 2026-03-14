@@ -1,9 +1,20 @@
 package templatetypes
 
 import (
+	"bufio"
 	"encoding/xml"
 	"fmt"
+	"strings"
 )
+
+func indent(content string) (string, error) {
+	out := ""
+	scanner := bufio.NewScanner(strings.NewReader(content))
+	for scanner.Scan() {
+		out += fmt.Sprintf("\t%s\n", scanner.Text())
+	}
+	return out, scanner.Err()
+}
 
 type Avconfig struct {
 	XMLName          xml.Name         `xml:"avconfig"`
@@ -14,7 +25,9 @@ type Avconfig struct {
 }
 
 func (a Avconfig) String() string {
-	return fmt.Sprintf("\nAvconfig\n\nOrigin: %s\nProvider: %s\nConnectionString: %s\nChannelTemplates:\n%s", a.Origin, a.Provider, a.ConnectionString, a.ChannelTemplates.String())
+	return fmt.Sprintf("\nAvconfig\n\tOrigin: %s\n\tProvider: %s\n"+
+		"\tConnectionString: %s\n\tChannelTemplates:\n%s",
+		a.Origin, a.Provider, a.ConnectionString, a.ChannelTemplates.String())
 }
 
 type ChannelTemplates struct {
@@ -82,6 +95,10 @@ type Channel struct {
 	RouterSetup                    RouterSetup               `xml:"router_setup"`
 }
 
+//func (c Channel) String() string {
+//
+//}
+
 type SwitcherSetup struct {
 	XMLName              xml.Name             `xml:"switcher_setup"`
 	Transitions          Transitions          `xml:"transitions"`
@@ -147,14 +164,35 @@ type SwitcherInputChannel struct {
 }
 
 type AudioSetup struct {
+	AudioChannels AudioChannels `xml:"audio_channels"`
+}
+
+func (a AudioSetup) String() string {
+	indentedOut, err := indent(a.AudioChannels.String())
+	if err != nil {
+		panic(err) // Todo: handle error correctly!
+	}
+	return fmt.Sprintf("Audio Setup:\n%s", indentedOut)
 }
 
 type AudioChannels struct {
-	XMLName      xml.Name       `xml:"audio_channels"`
-	AudioChannel []AudioChannel `xml:"audio_channel"`
+	XMLName          xml.Name           `xml:"audio_channels"`
+	AudioChannelData []AudioChannelData `xml:"audio_channel"`
 }
 
-type AudioChannel struct {
+func (a AudioChannels) String() string {
+	output := ""
+	for _, v := range a.AudioChannelData {
+		output += v.String() + "\n"
+	}
+	indentedOut, err := indent(output)
+	if err != nil {
+		panic(err) // Todo: handle error correctly!
+	}
+	return fmt.Sprintf("Audio Channels:\n%s", indentedOut)
+}
+
+type AudioChannelData struct {
 	XMLName          xml.Name `xml:"audio_channel"`
 	Name             string   `xml:"name,attr"`
 	S3000Name        string   `xml:"s3000_name,attr"`
@@ -184,9 +222,32 @@ type AudioChannel struct {
 	SkipCloseLevel   bool     `xml:"skip_close_level,attr"`
 }
 
+func (a AudioChannelData) String() string {
+	return fmt.Sprintf("Name: %s\nS3000 Name: %s\nLevel: %d\nCrossfade Time: %d\nCrossfade Timeout: %d\n"+
+		"Main: %t\nKeep: %t\nVideo Link: %s\nIndex: %d\nDelay: %d\nLoudness Level: %s\nInput Device: %s\n"+
+		"Initial Level: %d\nKey: %s\nCurrent Level: %d\nAction: %s\nFader Number: %d\nFader Type: %s\n"+
+		"Fade up in Preview: %t\nInitial Level: %d\nInitial Standby: %t\nIs Group Fader: %t\nIs Standby: %t\n"+
+		"Is Muted: %t\nChannel Mode %s\nSkip Close Level: %t\n",
+		a.Name, a.S3000Name, a.Level, a.Crossfadetime, a.CrossfadetimeOut, a.Main, a.Keep, a.Videolink, a.Index,
+		a.Delay, a.Loudnesslevel, a.Inputdevice, a.InitialLevel, a.Key, a.CurrentLevel, a.Action, a.FaderNr, a.Fadertype,
+		a.FadeUpInPreview, a.InitialLevel, a.InitialStandby, a.Isgroupfader, a.Isstandby, a.Ismuted, a.Channelmode, a.SkipCloseLevel)
+}
+
 type TakeCommands struct {
 	XMLName     xml.Name      `xml:"takecommands"`
 	TakeCommand []TakeCommand `xml:"takecommand"`
+}
+
+func (t TakeCommands) String() string {
+	output := ""
+	for _, v := range t.TakeCommand {
+		output += v.String() + "\n"
+	}
+	indentedOut, err := indent(output)
+	if err != nil {
+		panic(err) // Todo: handle error correctly!
+	}
+	return indentedOut
 }
 
 type TakeCommand struct {
@@ -196,9 +257,25 @@ type TakeCommand struct {
 	Parameter string   `xml:"parameter,attr"`
 }
 
+func (t TakeCommand) String() string {
+	return fmt.Sprintf("Take Command:\n\tCommand: %s\n\tValue: %s\n\tParameter: %s", t.Command, t.Value, t.Parameter)
+}
+
 type RouterSetup struct {
 	XMLName         xml.Name          `xml:"router_setup"`
 	RouterSetupData []RouterSetupData `xml:"setups>setup"`
+}
+
+func (r RouterSetup) String() string {
+	output := ""
+	for _, v := range r.RouterSetupData {
+		output += v.String() + "\n"
+	}
+	indentedOut, err := indent(output)
+	if err != nil {
+		panic(err) // Todo: handle error correctly!
+	}
+	return indentedOut
 }
 
 type RouterSetupData struct {
@@ -216,9 +293,30 @@ type RouterSetupData struct {
 	OutputAudiolink string   `xml:"output_audiolink,attr"`
 }
 
+func (r RouterSetupData) String() string {
+	return fmt.Sprintf("Router Setup Data:"+
+		"\n\tMatrix: %s\n\tLevel: %s\n\tInput Preview: %s\n\tOutput Preview: %s"+
+		"\n\tInput Program: %s\n\tOutput Program: %s\n\tProgram Delay: %s"+
+		"\n\tSalvo Preview: %s\n\tSalvo Program: %s\n\tInput Audiolink: %s\n\tOutput Audiolink: %s",
+		r.Matrix, r.Level, r.InputPreview, r.OutputPreview, r.InputProgram, r.OutputProgram,
+		r.ProgramDelay, r.SalvoPreview, r.SalvoProgram, r.InputAudiolink, r.OutputAudiolink)
+}
+
 type RoboticCameraControlSetup struct {
 	XMLName                       xml.Name                        `xml:"roboticcameracontrol_setup"`
 	RoboticCameraControlSetupData []RoboticCameraControlSetupData `xml:"setups>setup"`
+}
+
+func (r RoboticCameraControlSetup) String() string {
+	output := ""
+	for _, v := range r.RoboticCameraControlSetupData {
+		output += v.String() + "\n"
+	}
+	indentedOut, err := indent(output)
+	if err != nil {
+		panic(err) // Todo: handle error correctly!
+	}
+	return indentedOut
 }
 
 type RoboticCameraControlSetupData struct {
@@ -234,4 +332,13 @@ type RoboticCameraControlSetupData struct {
 	FadetimeProgram int      `xml:"fadetime_program,attr"`
 	DelayProgram    string   `xml:"delay_program,attr"` // Todo: find way to cast "" as 0
 	OnairProtect    string   `xml:"onair_protect,attr"`
+}
+
+func (r RoboticCameraControlSetupData) String() string {
+	return fmt.Sprintf("RoboticCameraControlSetupData:"+
+		"\n\tShot Name: %s\n\tCamera Number: %d\n\tPage Preview: %s\n\tPreset Preview: %s"+
+		"\n\tTime Preview: %d\n\tDelay Preview: %d\n\tPage Program: %s\n\tPreset Program: %s"+
+		"\n\tFadetime Program: %d\n\tDelay Program: %s\n\tOn Air Protect: %s",
+		r.ShotName, r.CameraNumber, r.PagePreview, r.PresetPreview, r.TimePreveiw, r.DelayPreview,
+		r.PageProgram, r.PresetProgram, r.FadetimeProgram, r.DelayProgram, r.OnairProtect)
 }
