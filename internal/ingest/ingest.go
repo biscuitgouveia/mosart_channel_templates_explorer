@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	data, err := os.ReadFile("channel_templates/channeltemplates.xml")
+	data, err := os.ReadFile("../../channel_templates/channeltemplates.xml")
 
 	if err != nil {
 		panic(err)

@@ -8,12 +8,12 @@ import (
 )
 
 func indent(content string) (string, error) {
-	out := ""
+	var out strings.Builder
 	scanner := bufio.NewScanner(strings.NewReader(content))
 	for scanner.Scan() {
-		out += fmt.Sprintf("\t%s\n", scanner.Text())
+		fmt.Fprintf(&out, "\t%s\n", scanner.Text())
 	}
-	return out, scanner.Err()
+	return out.String(), scanner.Err()
 }
 
 type Avconfig struct {
@@ -161,6 +161,18 @@ type SwitcherInputChannel struct {
 	Audiolink           string   `xml:"audiolink,attr"`
 	DelayTransitiononly bool     `xml:"delay_transitiononly,attr"`
 	Index               int      `xml:"index,attr"`
+}
+
+func (s SwitcherInputChannel) String() string {
+	return fmt.Sprintf("Name: %s\nXpoint: %s\nMix Delay: %d\nXpoint PP: %s\n"+
+		"Mix Effect: %s\nSet ME in PP: %t\nCrosspoint Hold: %t\nDSK Off: %t\n"+
+		"DSK 2 On: %t\nDSK 2 Off Delay: %d\nDSK 3 On: %t\nDSK 3 Off Delay: %d\n"+
+		"DSK 4 On: %t\nDSK 4 Off Delay: %d\nMix Delay: %d\nMix Delay Out: %d\n"+
+		"Audio Link: %s\nDelay Transition Only: %t\nIndex: %d\n",
+		s.Name, s.Xpoint, s.Mixdelay, s.XpointPp, s.Mixeffect, s.SetMeInPp,
+		s.CrosspointHold, s.DskOff, s.Dsk2On, s.Dsk2OffDelay, s.Dsk3On,
+		s.Dsk3OffDelay, s.Dsk4On, s.Dsk4OffDelay, s.MixDelay, s.MixDelayOut,
+		s.Audiolink, s.DelayTransitiononly, s.Index)
 }
 
 type AudioSetup struct {
